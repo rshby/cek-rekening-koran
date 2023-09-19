@@ -15,7 +15,7 @@ func CreateConnection() *sql.DB {
 	dbUser := os.Getenv("db_user")
 	dbName := os.Getenv("db_name")
 
-	dsn := fmt.Sprintf("%v:@tcp(%v:%v)/%v?parseTime=True&loc=Local", dbUser, dbHost, dbPort, dbName)
+	dsn := fmt.Sprintf("%v:@tcp(%v:%v)/%v?parseTime=true&loc=Local", dbUser, dbHost, dbPort, dbName)
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
 		panic("error cant connect database : " + err.Error())
