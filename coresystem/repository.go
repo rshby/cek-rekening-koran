@@ -6,35 +6,37 @@ import (
 	"errors"
 )
 
-type AgroCoreRepository struct {
+type CoreSystemRepository struct {
 	Db *sql.DB
 }
 
-func NewAgroCoreRepository(db *sql.DB) *AgroCoreRepository {
-	return &AgroCoreRepository{
+func NewACoreSystemRepository(db *sql.DB) *CoreSystemRepository {
+	return &CoreSystemRepository{
 		Db: db,
 	}
 }
 
-// method to get data by nomor_rekening
-func (a *AgroCoreRepository) GetByAccountNumber(ctx context.Context, tx *sql.Tx, accountNumber string) ([]CoreSystem, error) {
-	sqlQuery, err := tx.PrepareContext(ctx, "select account_number, account_name, remark, dorc, amount, transaction_date, transaction_time from coresystem WHERE account_number=? ORDER BY transaction_date ASC, transaction_time ASC")
+// method get data by nomor rekening
+func (c *CoreSystemRepository) GetByRekening(ctx context.Context, tx *sql.Tx, accountNumber string) ([]TabelCore, error) {
+	// create statement
+	queryStatement, err := tx.PrepareContext(ctx, "SELECT DISTINCT A.TRDAT7, A.TRDAT6, A.TRTIME, A.TRDORC, CASE WHEN A.TELLERID IN ('DDCYCLING', 'SVCCHGPAY', 'TAXCHARGE') THEN ROUND(CONVERT(DECIMAL(20,7), A.amount), 2) ELSE A.AMOUNT END AS AMOUNT, '0' BAL, A.TRSTAT, A.TRREMK, A.TRREFN, A.ECINDICATOR, A.TRREFNEC, A.TELLERID, B.ATMID, B.ATMJOURNALSEQ, A.JOURNALSEQ, A.SOURCEOFBRANCH FROM ABCS_T_ABCSHIST A LEFT JOIN ABCS_T_ATMTRN_BAK B ON A.TRREFN = B.TRREFN WHERE A.accountnumber='045202000114806' ORDER BY A.TRDAT7 ASC, A.TRTIME ASC")
 	if err != nil {
 		return nil, err
 	}
 
-	rows, err := sqlQuery.QueryContext(ctx, accountNumber)
+	rows, err := queryStatement.QueryContext(ctx)
+	defer rows.Close()
 	if err != nil {
 		return nil, err
 	}
 
-	var results []CoreSystem
+	var results []TabelCore
 	for rows.Next() {
-		var result CoreSystem
-		if err := rows.Scan(&result.AccountNumber, &result.AccountName, &result.Remark, &result.Dorc, &result.Amount, &result.TransactionDate, &result.TransactionTime); err != nil {
+		var coreSystem TabelCore
+		if err := rows.Scan(&coreSystem.TrDat7, &coreSystem.TrDat6, &coreSystem.TrTime, &coreSystem.TrDorc, &coreSystem.Amount, &coreSystem.Bal, &coreSystem.TrStat, &coreSystem.TrRemk, &coreSystem.TrRefn, &coreSystem.EcIndicator, &coreSystem.TrRefnEc, &coreSystem.TellerId, &coreSystem.AtmId, &coreSystem.AtmJournalSeq, &coreSystem.JournalSeq, &coreSystem.SourceOfBranch); err != nil {
 			return nil, err
 		}
-		results = append(results, result)
+		results = append(results, coreSystem)
 	}
 
 	if len(results) == 0 {

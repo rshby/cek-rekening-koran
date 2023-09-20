@@ -25,9 +25,28 @@ func main() {
 	defer db.Close()
 
 	// create repository layer
-	repo := coresystem.NewAgroCoreRepository(db)
+	repo := coresystem.NewACoreSystemRepository(db)
 
-	// create service layer
+	/*
+			tx, err := db.Begin()
+			if err != nil {
+				log.Fatalf(err.Error())
+			}
+
+			defer func() {
+				if err := recover(); err != nil {
+					tx.Rollback()
+				}
+			}()
+
+
+
+		results, err := repo.GetByRekening(context.Background(), tx, "045202000114806")
+		fmt.Println(results)
+
+	*/
+
+	//create service layer
 	service := coresystem.NewAgroCoreService(db, repo)
 
 	err := service.Process(context.Background(), "301137167")
